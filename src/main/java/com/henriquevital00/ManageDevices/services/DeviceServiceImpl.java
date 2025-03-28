@@ -12,6 +12,8 @@ import com.henriquevital00.ManageDevices.repository.DeviceHistoryRepository;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
 import com.henriquevital00.ManageDevices.utils.Constants;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Log4j2
 public class DeviceServiceImpl implements  DeviceService {
     private DeviceRepository deviceRepository;
     private DeviceHistoryRepository deviceHistoryRepository;
@@ -51,7 +54,9 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
+//    @Cacheable(value = "devices", key = "#page + '-' + #size")
     public List<DeviceDto> getAllDevices(int page, int size) {
+        log.info("fetching devices from the database");
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devicePage = deviceRepository.findAll(pageable);
         return devicePage.stream()
@@ -60,13 +65,17 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
+    @Cacheable(value = "device", key = "#id")
     public DeviceDto getDeviceById(Long id) {
+        log.info("fetching device by id from the database");
         Optional<Device> device = deviceRepository.findById(id);
         return device.map(deviceMapper::toDto).orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
     }
 
     @Override
+    @Cacheable(value = "devicesByBrand", key = "#brand + '-' + #page + '-' + #size")
     public List<DeviceDto> getDevicesByBrand(String brand, int page, int size) {
+        log.info("fetching device by brand from the database");
         String searchBrand = brand.toUpperCase();
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devices = deviceRepository.getDeviceByBrand(searchBrand, pageable);
@@ -80,7 +89,9 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
+    @Cacheable(value = "devicesByState", key = "#state + '-' + #page + '-' + #size")
     public List<DeviceDto> getDevicesByState(DeviceStateEnum state, int page, int size) {
+        log.info("fetching device by state from the database");
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devices = deviceRepository.getDeviceByState(state, pageable);
         if (devices.isEmpty()) {
