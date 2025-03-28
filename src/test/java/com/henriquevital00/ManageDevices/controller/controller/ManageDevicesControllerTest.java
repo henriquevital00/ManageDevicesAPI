@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -158,33 +159,75 @@ public class ManageDevicesControllerTest {
     }
 
     @Test
-    void getDevicesByBrand_ShouldReturnListOfDeviceDtos() {
+    void getDevicesByBrand_ShouldReturnListOfDeviceDtos() throws Exception {
         String brand = "Brand1";
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", brand, DeviceStateEnum.INACTIVE);
 
         when(deviceService.getDevicesByBrand(brand, page, size)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
 
-        List<DeviceDto> result = deviceService.getDevicesByBrand(brand, page, size);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(deviceDto1, result.get(0));
-        assertEquals(deviceDto2, result.get(1));
+        mockMvc.perform(get("/api/devices/brand")
+                        .param("brand", brand)
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(deviceDto1.id()))
+                .andExpect(jsonPath("$[0].name").value(deviceDto1.name()))
+                .andExpect(jsonPath("$[0].brand").value(deviceDto1.brand()))
+                .andExpect(jsonPath("$[0].state").value(deviceDto1.state().toString()))
+                .andExpect(jsonPath("$[1].id").value(deviceDto2.id()))
+                .andExpect(jsonPath("$[1].name").value(deviceDto2.name()))
+                .andExpect(jsonPath("$[1].brand").value(deviceDto2.brand()))
+                .andExpect(jsonPath("$[1].state").value(deviceDto2.state().toString()));
     }
 
     @Test
-    void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
+    void getDevicesByBrand_ShouldThrowResourceNotFoundException() throws Exception {
         String brand = "NonExistentBrand";
 
         when(deviceService.getDevicesByBrand(brand, page, size)).thenThrow(new ResourceNotFoundException("brand", brand));
 
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> deviceService.getDevicesByBrand(brand, page, size)
-        );
+        mockMvc.perform(get("/api/devices/brand")
+                        .param("brand", brand)
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size)))
+                .andExpect(status().isNotFound());
+    }
 
-        assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());
+    @Test
+    void getDevicesByState_ShouldReturnListOfDeviceDtos() throws Exception {
+        DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", state);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", state);
+
+        when(deviceService.getDevicesByState(state, 0, 10)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
+
+        mockMvc.perform(get("/api/devices/state")
+                        .param("state", state.toString())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(deviceDto1.id()))
+                .andExpect(jsonPath("$[0].name").value(deviceDto1.name()))
+                .andExpect(jsonPath("$[0].brand").value(deviceDto1.brand()))
+                .andExpect(jsonPath("$[0].state").value(deviceDto1.state().toString()))
+                .andExpect(jsonPath("$[1].id").value(deviceDto2.id()))
+                .andExpect(jsonPath("$[1].name").value(deviceDto2.name()))
+                .andExpect(jsonPath("$[1].brand").value(deviceDto2.brand()))
+                .andExpect(jsonPath("$[1].state").value(deviceDto2.state().toString()));
+    }
+
+    @Test
+    void getDevicesByState_ShouldThrowResourceNotFoundException() throws Exception {
+        DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
+
+        when(deviceService.getDevicesByState(state, 0, 10)).thenThrow(new ResourceNotFoundException("state", state.toString()));
+
+        mockMvc.perform(get("/api/devices/state")
+                        .param("state", state.toString())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
