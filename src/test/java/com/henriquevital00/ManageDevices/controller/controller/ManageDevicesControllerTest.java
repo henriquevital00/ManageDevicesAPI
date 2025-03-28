@@ -99,7 +99,7 @@ public class ManageDevicesControllerTest {
 
     @Test
     void createDeviceWithNullStateReturnsBadRequest() throws Exception {
-        String url = "/api/createDevice";
+        String url = "/v1/devices/create";
         DeviceCreateDto invalidDeviceDto = new DeviceCreateDto("Value1", "Value2", null);
 
         mockMvc.perform(post(url)
@@ -132,7 +132,7 @@ public class ManageDevicesControllerTest {
 
         when(deviceService.getAllDevices(page, size)).thenReturn(new ArrayList<>());
 
-        mockMvc.perform(get("/api/devices")
+        mockMvc.perform(get("/v1/devices")
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size)))
                 .andExpect(status().isOk());
@@ -154,7 +154,7 @@ public class ManageDevicesControllerTest {
     void getDeviceById_ShouldReturnNotFoundStatus() throws Exception {
         when(deviceService.getDeviceById(1L)).thenThrow(new ResourceNotFoundException("id", "1"));
 
-        mockMvc.perform(get("/api/device/1"))
+        mockMvc.perform(get("/v1/devices/1"))
                 .andExpect(status().isNotFound());
     }
 
@@ -166,7 +166,7 @@ public class ManageDevicesControllerTest {
 
         when(deviceService.getDevicesByBrand(brand, page, size)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
 
-        mockMvc.perform(get("/api/devices/brand")
+        mockMvc.perform(get("/v1/devices/brand")
                         .param("brand", brand)
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size)))
@@ -187,7 +187,7 @@ public class ManageDevicesControllerTest {
 
         when(deviceService.getDevicesByBrand(brand, page, size)).thenThrow(new ResourceNotFoundException("brand", brand));
 
-        mockMvc.perform(get("/api/devices/brand")
+        mockMvc.perform(get("/v1/devices/brand")
                         .param("brand", brand)
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size)))
@@ -202,7 +202,7 @@ public class ManageDevicesControllerTest {
 
         when(deviceService.getDevicesByState(state, 0, 10)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
 
-        mockMvc.perform(get("/api/devices/state")
+        mockMvc.perform(get("/v1/devices/state")
                         .param("state", state.toString())
                         .param("page", "0")
                         .param("size", "10"))
@@ -223,7 +223,7 @@ public class ManageDevicesControllerTest {
 
         when(deviceService.getDevicesByState(state, 0, 10)).thenThrow(new ResourceNotFoundException("state", state.toString()));
 
-        mockMvc.perform(get("/api/devices/state")
+        mockMvc.perform(get("/v1/devices/state")
                         .param("state", state.toString())
                         .param("page", "0")
                         .param("size", "10"))
@@ -254,7 +254,7 @@ public class ManageDevicesControllerTest {
     void deleteDevice_ShouldReturnNoContentStatus() throws Exception {
         long id = 1L;
 
-        mockMvc.perform(delete("/api/device/{id}", id))
+        mockMvc.perform(delete("/v1/devices/{id}", id))
                 .andExpect(status().isNoContent());
     }
 
@@ -264,7 +264,7 @@ public class ManageDevicesControllerTest {
 
         doThrow(new ResourceNotFoundException("id", String.valueOf(id))).when(deviceService).deleteDevice(id);
 
-        mockMvc.perform(delete("/api/device/{id}", id))
+        mockMvc.perform(delete("/v1/devices/{id}", id))
                 .andExpect(status().isNotFound());
     }
 
@@ -274,7 +274,7 @@ public class ManageDevicesControllerTest {
 
         doThrow(new DeviceInUseException("Device is currently in use")).when(deviceService).deleteDevice(id);
 
-        mockMvc.perform(delete("/api/device/{id}", id))
+        mockMvc.perform(delete("/v1/devices/{id}", id))
                 .andExpect(status().isForbidden());
     }
 }

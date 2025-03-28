@@ -27,7 +27,7 @@ import java.util.List;
         description = "CRUD REST APIs to CREATE, UPDATE, FETCH AND DELETE Device details"
 )
 @RestController
-@RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+@RequestMapping(path="/v1/devices", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
 @Validated
 @AllArgsConstructor
 public class ManageDevicesController {
@@ -55,7 +55,7 @@ public class ManageDevicesController {
             )
     }
     )
-    @PostMapping("/createDevice")
+    @PostMapping("/create")
     public ResponseEntity<DeviceDto> createDevice(@Valid @RequestBody DeviceCreateDto device) {
         DeviceDto createdDevice = deviceService.createDevice(device);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -80,7 +80,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @GetMapping("/devices")
+    @GetMapping
     public ResponseEntity<List<DeviceDto>> getAllDevices(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -113,7 +113,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @GetMapping("/device/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<DeviceDto> getDeviceById(@PathVariable Long id) {
         DeviceDto device = deviceService.getDeviceById(id);
         return ResponseEntity.ok(device);
@@ -143,7 +143,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @GetMapping("/devices/brand")
+    @GetMapping("/brand")
     public ResponseEntity<List<DeviceDto>> getDevicesByBrand(@RequestParam String brand,
                                                              @RequestParam(defaultValue = "0") int page,
                                                              @RequestParam(defaultValue = "10") int size) {
@@ -175,7 +175,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @GetMapping("/devices/state")
+    @GetMapping("/state")
     public ResponseEntity<List<DeviceDto>> getDevicesByState(@RequestParam DeviceStateEnum state,
                                                              @RequestParam(defaultValue = "0") int page,
                                                              @RequestParam(defaultValue = "10") int size) {
@@ -207,7 +207,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @PutMapping("/device/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<DeviceDto> updateDevice(@PathVariable Long id, @Valid @RequestBody DeviceCreateDto device) {
         DeviceDto updatedDevice = deviceService.updateDevice(id, device);
         return ResponseEntity.ok(updatedDevice);
@@ -237,7 +237,7 @@ public class ManageDevicesController {
                     )
             )
     })
-    @DeleteMapping("/device/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();
