@@ -54,9 +54,8 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
-//    @Cacheable(value = "devices", key = "#page + '-' + #size")
+    @Cacheable(value = "devices", key = "#page + '-' + #size")
     public List<DeviceDto> getAllDevices(int page, int size) {
-        log.info("fetching devices from the database");
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devicePage = deviceRepository.findAll(pageable);
         return devicePage.stream()
@@ -67,7 +66,6 @@ public class DeviceServiceImpl implements  DeviceService {
     @Override
     @Cacheable(value = "device", key = "#id")
     public DeviceDto getDeviceById(Long id) {
-        log.info("fetching device by id from the database");
         Optional<Device> device = deviceRepository.findById(id);
         return device.map(deviceMapper::toDto).orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
     }
@@ -75,7 +73,6 @@ public class DeviceServiceImpl implements  DeviceService {
     @Override
     @Cacheable(value = "devicesByBrand", key = "#brand + '-' + #page + '-' + #size")
     public List<DeviceDto> getDevicesByBrand(String brand, int page, int size) {
-        log.info("fetching device by brand from the database");
         String searchBrand = brand.toUpperCase();
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devices = deviceRepository.getDeviceByBrand(searchBrand, pageable);
@@ -91,7 +88,6 @@ public class DeviceServiceImpl implements  DeviceService {
     @Override
     @Cacheable(value = "devicesByState", key = "#state + '-' + #page + '-' + #size")
     public List<DeviceDto> getDevicesByState(DeviceStateEnum state, int page, int size) {
-        log.info("fetching device by state from the database");
         Pageable pageable = PageRequest.of(page, size);
         Page<Device> devices = deviceRepository.getDeviceByState(state, pageable);
         if (devices.isEmpty()) {
