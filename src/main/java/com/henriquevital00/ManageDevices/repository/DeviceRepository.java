@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface DeviceRepository  extends JpaRepository<Device, Long> {
     List<DeviceDto> getDevicesByBrand(String brand);
-
     List<DeviceDto> getDevicesByState(String state);
+    DeviceDto getDeviceById(Long id);
 }

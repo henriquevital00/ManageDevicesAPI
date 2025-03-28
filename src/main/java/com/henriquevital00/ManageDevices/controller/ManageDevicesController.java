@@ -40,4 +40,10 @@ public class ManageDevicesController {
         List<DeviceDto> devices = deviceService.getAllDevices();
         return ResponseEntity.ok(devices);
     }
+
+    @GetMapping("/device/{id}")
+    public ResponseEntity<DeviceDto> getDeviceById(@PathVariable Long id) {
+        DeviceDto device = deviceService.getDeviceById(id);
+        return ResponseEntity.ok(device);
+    }
 }

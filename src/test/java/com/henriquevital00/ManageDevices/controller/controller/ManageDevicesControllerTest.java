@@ -7,6 +7,7 @@ import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.exception.GlobalExceptionHandler;
+import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.services.DeviceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -124,5 +125,25 @@ public class ManageDevicesControllerTest {
 
         mockMvc.perform(get("/api/devices"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getDeviceById_ShouldReturnDeviceDto() {
+        when(deviceService.getDeviceById(1L)).thenReturn(deviceDto);
+
+        ResponseEntity<DeviceDto> response = manageDevicesController.getDeviceById(1L);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(deviceDto, response.getBody());
+    }
+
+    @Test
+    void getDeviceById_ShouldReturnNotFoundStatus() throws Exception {
+        when(deviceService.getDeviceById(1L)).thenThrow(new ResourceNotFoundException("id", "1"));
+
+        mockMvc.perform(get("/api/device/1"))
+                .andExpect(status().isNotFound());
     }
 }
