@@ -9,10 +9,10 @@ import java.util.Map;
 
 public interface DeviceService {
     DeviceDto createDevice(DeviceCreateDto deviceCreateDto);
-    List<DeviceDto> getAllDevices();
+    List<DeviceDto> getAllDevices(int page, int size);
     DeviceDto getDeviceById(Long id);
-    List<DeviceDto> getDevicesByBrand(String brand);
-    List<DeviceDto> getDevicesByState(DeviceStateEnum state);
+    List<DeviceDto> getDevicesByBrand(String brand, int page, int size);
+    List<DeviceDto> getDevicesByState(DeviceStateEnum state, int page, int size);
     DeviceDto updateDevice(Long id, DeviceCreateDto deviceCreateDto);
     void deleteDevice(Long id);
 }

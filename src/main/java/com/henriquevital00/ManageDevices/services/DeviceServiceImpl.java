@@ -9,6 +9,9 @@ import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,8 +35,10 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
-    public List<DeviceDto> getAllDevices() {
-        return deviceRepository.findAll().stream()
+    public List<DeviceDto> getAllDevices(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devicePage = deviceRepository.findAll(pageable);
+        return devicePage.stream()
                 .map(deviceMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -45,9 +50,10 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
-    public List<DeviceDto> getDevicesByBrand(String brand) {
+    public List<DeviceDto> getDevicesByBrand(String brand, int page, int size) {
         String searchBrand = brand.toUpperCase();
-        List<Device> devices = deviceRepository.getDeviceByBrand(searchBrand);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devices = deviceRepository.getDeviceByBrand(searchBrand, pageable);
         if (devices.isEmpty()) {
             throw new ResourceNotFoundException("brand", searchBrand);
         }
@@ -58,8 +64,9 @@ public class DeviceServiceImpl implements  DeviceService {
     }
 
     @Override
-    public List<DeviceDto> getDevicesByState(DeviceStateEnum state) {
-        List<Device> devices = deviceRepository.getDeviceByState(state);
+    public List<DeviceDto> getDevicesByState(DeviceStateEnum state, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devices = deviceRepository.getDeviceByState(state, pageable);
         if (devices.isEmpty()) {
             throw new ResourceNotFoundException("state", state.toString());
         }

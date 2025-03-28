@@ -37,8 +37,11 @@ public class ManageDevicesController {
     }
 
     @GetMapping("/devices")
-    public ResponseEntity<List<DeviceDto>> getAllDevices() {
-        List<DeviceDto> devices = deviceService.getAllDevices();
+    public ResponseEntity<List<DeviceDto>> getAllDevices(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        List<DeviceDto> devices = deviceService.getAllDevices(page, size);
         return ResponseEntity.ok(devices);
     }
 
@@ -49,14 +52,18 @@ public class ManageDevicesController {
     }
 
     @GetMapping("/devices/brand")
-    public ResponseEntity<List<DeviceDto>> getDevicesByBrand(@RequestParam String brand) {
-        List<DeviceDto> devices = deviceService.getDevicesByBrand(brand);
+    public ResponseEntity<List<DeviceDto>> getDevicesByBrand(@RequestParam String brand,
+                                                             @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "10") int size) {
+        List<DeviceDto> devices = deviceService.getDevicesByBrand(brand, page, size);
         return ResponseEntity.ok(devices);
     }
 
     @GetMapping("/devices/state")
-    public ResponseEntity<List<DeviceDto>> getDevicesByState(@RequestParam DeviceStateEnum state) {
-        List<DeviceDto> devices = deviceService.getDevicesByState(state);
+    public ResponseEntity<List<DeviceDto>> getDevicesByState(@RequestParam DeviceStateEnum state,
+                                                             @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "10") int size) {
+        List<DeviceDto> devices = deviceService.getDevicesByState(state, page, size);
         return ResponseEntity.ok(devices);
     }
 

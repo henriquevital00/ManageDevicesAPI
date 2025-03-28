@@ -46,9 +46,13 @@ public class ManageDevicesControllerTest {
     private DeviceCreateDto deviceCreateDto;
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
+    private int page;
+    private int size;
 
     @BeforeEach
     public void setup() {
+        page = 0;
+        size = 10;
         deviceCreateDto = new DeviceCreateDto("Value1", "Value2", DeviceStateEnum.AVAILABLE);
         deviceDto = new DeviceDto(1L, "Value1", "Value2", DeviceStateEnum.AVAILABLE);
         mockMvc = MockMvcBuilders
@@ -109,9 +113,9 @@ public class ManageDevicesControllerTest {
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE);
 
-        when(deviceService.getAllDevices()).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
+        when(deviceService.getAllDevices(page, size)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
 
-        ResponseEntity<List<DeviceDto>> response = manageDevicesController.getAllDevices();
+        ResponseEntity<List<DeviceDto>> response = manageDevicesController.getAllDevices(page, size);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -123,9 +127,14 @@ public class ManageDevicesControllerTest {
 
     @Test
     void getAllDevices_ShouldReturnOkStatus() throws Exception {
-        when(deviceService.getAllDevices()).thenReturn(new ArrayList<>());
+        int page = 0;
+        int size = 10;
 
-        mockMvc.perform(get("/api/devices"))
+        when(deviceService.getAllDevices(page, size)).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/devices")
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size)))
                 .andExpect(status().isOk());
     }
 
@@ -155,9 +164,9 @@ public class ManageDevicesControllerTest {
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", brand, DeviceStateEnum.INACTIVE);
 
-        when(deviceService.getDevicesByBrand(brand)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
+        when(deviceService.getDevicesByBrand(brand, page, size)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
 
-        List<DeviceDto> result = deviceService.getDevicesByBrand(brand);
+        List<DeviceDto> result = deviceService.getDevicesByBrand(brand, page, size);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -169,11 +178,11 @@ public class ManageDevicesControllerTest {
     void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
         String brand = "NonExistentBrand";
 
-        when(deviceService.getDevicesByBrand(brand)).thenThrow(new ResourceNotFoundException("brand", brand));
+        when(deviceService.getDevicesByBrand(brand, page, size)).thenThrow(new ResourceNotFoundException("brand", brand));
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                () -> deviceService.getDevicesByBrand(brand)
+                () -> deviceService.getDevicesByBrand(brand, page, size)
         );
 
         assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());

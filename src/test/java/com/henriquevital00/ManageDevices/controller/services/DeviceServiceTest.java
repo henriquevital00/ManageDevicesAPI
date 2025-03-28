@@ -15,6 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -42,9 +46,13 @@ public class DeviceServiceTest {
     private DeviceCreateDto deviceCreateDto;
     private Device device;
     private DeviceDto deviceDto;
+    private int page;
+    private int size;
 
     @BeforeEach
     void setUp() {
+        page = 0;
+        size = 10;
         deviceCreateDto = new DeviceCreateDto("Value1", "Value2", DeviceStateEnum.AVAILABLE);
         device = new Device(1L, "Value1", "Value2", DeviceStateEnum.AVAILABLE, LocalDateTime.now());
         deviceDto = new DeviceDto(1L, "Value1", "Value2", DeviceStateEnum.AVAILABLE);
@@ -67,16 +75,18 @@ public class DeviceServiceTest {
 
     @Test
     void getAllDevices_ShouldReturnListOfDeviceDtos() {
+        Pageable pageable = PageRequest.of(page, size);
         Device device1 = new Device(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE, null);
         Device device2 = new Device(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE, null);
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE);
+        Page<Device> devicePage = new PageImpl<>(Arrays.asList(device1, device2), pageable, 2);
 
-        when(deviceRepository.findAll()).thenReturn(Arrays.asList(device1, device2));
+        when(deviceRepository.findAll(pageable)).thenReturn(devicePage);
         when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
         when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
 
-        List<DeviceDto> result = deviceService.getAllDevices();
+        List<DeviceDto> result = deviceService.getAllDevices(page, size);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -86,9 +96,12 @@ public class DeviceServiceTest {
 
     @Test
     void getAllDevices_ShouldReturnEmptyListOfDeviceDtos() {
-        when(deviceRepository.findAll()).thenReturn(new ArrayList<>());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devicePage = new PageImpl<>(new ArrayList<>(), pageable, 0);
 
-        List<DeviceDto> result = deviceService.getAllDevices();
+        when(deviceRepository.findAll(pageable)).thenReturn(devicePage);
+
+        List<DeviceDto> result = deviceService.getAllDevices(page, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -123,17 +136,19 @@ public class DeviceServiceTest {
 
     @Test
     void getDevicesByBrand_ShouldReturnListOfDeviceDtos() {
+        Pageable pageable = PageRequest.of(page, size);
         String brand = "BRAND1"; // Ensure the brand matches the actual invocation
         Device device1 = new Device(1L, "Device1", brand, DeviceStateEnum.AVAILABLE, null);
         Device device2 = new Device(2L, "Device2", brand, DeviceStateEnum.INACTIVE, null);
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", brand, DeviceStateEnum.INACTIVE);
+        Page<Device> devicePage = new PageImpl<>(Arrays.asList(device1, device2), pageable, 2);
 
-        when(deviceRepository.getDeviceByBrand(brand)).thenReturn(Arrays.asList(device1, device2));
+        when(deviceRepository.getDeviceByBrand(brand, pageable)).thenReturn(devicePage);
         when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
         when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
 
-        List<DeviceDto> result = deviceService.getDevicesByBrand(brand);
+        List<DeviceDto> result = deviceService.getDevicesByBrand(brand, page, size);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -143,29 +158,35 @@ public class DeviceServiceTest {
 
     @Test
     void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
-        String brand = "NONEXISTENTBRAND"; // Ensure the brand matches the actual invocation
+        String brand = "NONEXISTENTBRAND";
 
-        when(deviceRepository.getDeviceByBrand(brand)).thenReturn(new ArrayList<>());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devicePage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        when(deviceRepository.getDeviceByBrand(brand, pageable)).thenReturn(devicePage);
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> deviceService.getDevicesByBrand(brand)
+                () -> deviceService.getDevicesByBrand(brand, page, size)
         );
     }
 
     @Test
     void getDevicesByState_ShouldReturnListOfDeviceDtos() {
         DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size);
         Device device1 = new Device(1L, "Device1", "Brand1", state, null);
         Device device2 = new Device(2L, "Device2", "Brand2", state, null);
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", state);
         DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", state);
+        Page<Device> devicePage = new PageImpl<>(Arrays.asList(device1, device2), pageable, 2);
 
-        when(deviceRepository.getDeviceByState(state)).thenReturn(Arrays.asList(device1, device2));
+        when(deviceRepository.getDeviceByState(state, pageable)).thenReturn(devicePage);
         when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
         when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
 
-        List<DeviceDto> result = deviceService.getDevicesByState(state);
+        List<DeviceDto> result = deviceService.getDevicesByState(state, page, size);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -177,11 +198,14 @@ public class DeviceServiceTest {
     void getDevicesByState_ShouldThrowResourceNotFoundException() {
         DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
 
-        when(deviceRepository.getDeviceByState(state)).thenReturn(new ArrayList<>());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Device> devicePage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+
+        when(deviceRepository.getDeviceByState(state, pageable)).thenReturn(devicePage);
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                () -> deviceService.getDevicesByState(state)
+                () -> deviceService.getDevicesByState(state, page, size)
         );
 
         assertEquals("state not found with the given input data AVAILABLE", exception.getMessage());
