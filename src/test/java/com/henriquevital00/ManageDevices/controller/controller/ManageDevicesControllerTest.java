@@ -21,9 +21,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,5 +99,30 @@ public class ManageDevicesControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDeviceDto)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllDevices_ShouldReturnListOfDeviceDtos() {
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE);
+
+        when(deviceService.getAllDevices()).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
+
+        ResponseEntity<List<DeviceDto>> response = manageDevicesController.getAllDevices();
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
+        assertEquals(deviceDto1, response.getBody().get(0));
+        assertEquals(deviceDto2, response.getBody().get(1));
+    }
+
+    @Test
+    void getAllDevices_ShouldReturnOkStatus() throws Exception {
+        when(deviceService.getAllDevices()).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/devices"))
+                .andExpect(status().isOk());
     }
 }

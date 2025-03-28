@@ -23,4 +23,11 @@ public class DeviceServiceImpl implements  DeviceService {
         Device savedDevice = deviceRepository.save(device);
         return deviceMapper.toDto(savedDevice);
     }
+
+    @Override
+    public List<DeviceDto> getAllDevices() {
+        return deviceRepository.findAll().stream()
+                .map(deviceMapper::toDto)
+                .collect(Collectors.toList());
+    }
 }

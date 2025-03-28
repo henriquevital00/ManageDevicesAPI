@@ -15,6 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -57,4 +60,34 @@ public class DeviceServiceTest {
         assertEquals(deviceDto.state(), result.state());
         assertEquals(deviceDto.brand(), result.brand());
     }
+
+    @Test
+    void getAllDevices_ShouldReturnListOfDeviceDtos() {
+        Device device1 = new Device(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE, null);
+        Device device2 = new Device(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE, null);
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", DeviceStateEnum.AVAILABLE);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", DeviceStateEnum.INACTIVE);
+
+        when(deviceRepository.findAll()).thenReturn(Arrays.asList(device1, device2));
+        when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
+        when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
+
+        List<DeviceDto> result = deviceService.getAllDevices();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(deviceDto1, result.get(0));
+        assertEquals(deviceDto2, result.get(1));
+    }
+
+    @Test
+    void getAllDevices_ShouldReturnEmptyListOfDeviceDtos() {
+        when(deviceRepository.findAll()).thenReturn(new ArrayList<>());
+
+        List<DeviceDto> result = deviceService.getAllDevices();
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+    }
+
 }
