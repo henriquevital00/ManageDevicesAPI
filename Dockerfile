@@ -2,7 +2,7 @@
 FROM openjdk:21-jdk-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /tmp
 
 # Copy the Maven build file and the source code to the container
 COPY target/ManageDevices-0.0.1-SNAPSHOT.jar device-management.jar
