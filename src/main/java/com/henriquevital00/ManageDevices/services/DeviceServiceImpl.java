@@ -4,6 +4,7 @@ import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.entity.Device;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
+import com.henriquevital00.ManageDevices.exception.DeviceInUseException;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
@@ -68,6 +69,7 @@ public class DeviceServiceImpl implements  DeviceService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public DeviceDto updateDevice(Long id, DeviceCreateDto deviceCreateDto) {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
@@ -81,5 +83,17 @@ public class DeviceServiceImpl implements  DeviceService {
 
         deviceRepository.save(device);
         return deviceMapper.toDto(device);
+    }
+
+    @Override
+    public void deleteDevice(Long id) {
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
+
+        if (device.getState() == DeviceStateEnum.IN_USE) {
+            throw new DeviceInUseException("Device is currently in use and cannot be deleted");
+        }
+
+        deviceRepository.delete(device);
     }
 }

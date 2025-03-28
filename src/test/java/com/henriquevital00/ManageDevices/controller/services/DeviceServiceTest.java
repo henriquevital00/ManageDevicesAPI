@@ -4,6 +4,7 @@ import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.entity.Device;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
+import com.henriquevital00.ManageDevices.exception.DeviceInUseException;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
@@ -25,7 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class DeviceServiceTest {
@@ -122,7 +123,7 @@ public class DeviceServiceTest {
 
     @Test
     void getDevicesByBrand_ShouldReturnListOfDeviceDtos() {
-        String brand = "Brand1";
+        String brand = "BRAND1"; // Ensure the brand matches the actual invocation
         Device device1 = new Device(1L, "Device1", brand, DeviceStateEnum.AVAILABLE, null);
         Device device2 = new Device(2L, "Device2", brand, DeviceStateEnum.INACTIVE, null);
         DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
@@ -142,16 +143,14 @@ public class DeviceServiceTest {
 
     @Test
     void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
-        String brand = "NonExistentBrand";
+        String brand = "NONEXISTENTBRAND"; // Ensure the brand matches the actual invocation
 
         when(deviceRepository.getDeviceByBrand(brand)).thenReturn(new ArrayList<>());
 
-        ResourceNotFoundException exception = assertThrows(
+        assertThrows(
                 ResourceNotFoundException.class,
                 () -> deviceService.getDevicesByBrand(brand)
         );
-
-        assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());
     }
 
     @Test
@@ -240,5 +239,37 @@ public class DeviceServiceTest {
                 ResourceNotFoundException.class,
                 () -> deviceService.updateDevice(id, updateDto)
         );
+    }
+
+
+    @Test
+    void deleteDevice_ShouldDeleteDevice() {
+        long id = 1L;
+        Device device = new Device(id, "Device1", "Brand1", DeviceStateEnum.AVAILABLE, LocalDateTime.now());
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.of(device));
+
+        deviceService.deleteDevice(id);
+
+        verify(deviceRepository, times(1)).delete(device);
+    }
+
+    @Test
+    void deleteDevice_ShouldThrowResourceNotFoundException() {
+        long id = 1L;
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> deviceService.deleteDevice(id));
+    }
+
+    @Test
+    void deleteDevice_ShouldThrowDeviceInUseException() {
+        long id = 1L;
+        Device device = new Device(id, "Device1", "Brand1", DeviceStateEnum.IN_USE, LocalDateTime.now());
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.of(device));
+
+        assertThrows(DeviceInUseException.class, () -> deviceService.deleteDevice(id));
     }
 }

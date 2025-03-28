@@ -14,4 +14,5 @@ public interface DeviceService {
     List<DeviceDto> getDevicesByBrand(String brand);
     List<DeviceDto> getDevicesByState(DeviceStateEnum state);
     DeviceDto updateDevice(Long id, DeviceCreateDto deviceCreateDto);
+    void deleteDevice(Long id);
 }
