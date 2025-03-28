@@ -1,0 +1,98 @@
+package com.henriquevital00.ManageDevices.controller.controller;
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.henriquevital00.ManageDevices.controller.ManageDevicesController;
+import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
+import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
+import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
+import com.henriquevital00.ManageDevices.exception.GlobalExceptionHandler;
+import com.henriquevital00.ManageDevices.services.DeviceService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(MockitoExtension.class)
+public class ManageDevicesControllerTest {
+
+    @InjectMocks
+    private ManageDevicesController manageDevicesController;
+    @Mock
+    private DeviceService deviceService;
+    private DeviceDto deviceDto;
+    private DeviceCreateDto deviceCreateDto;
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setup() {
+        deviceCreateDto = new DeviceCreateDto("Value1", "Value2", DeviceStateEnum.AVAILABLE);
+        deviceDto = new DeviceDto(1L, "Value1", "Value2", DeviceStateEnum.AVAILABLE);
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(manageDevicesController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    void createDeviceReturnsCreatedStatus() throws Exception {
+        when(deviceService.createDevice(any(DeviceCreateDto.class))).thenReturn(deviceDto);
+
+        ResponseEntity<DeviceDto> response = manageDevicesController.createDevice(deviceCreateDto);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+    }
+
+    @Test
+    void createDeviceReturnsLocationHeader() {
+        when(deviceService.createDevice(any(DeviceCreateDto.class))).thenReturn(deviceDto);
+
+        ResponseEntity<DeviceDto> response = manageDevicesController.createDevice(deviceCreateDto);
+
+        assertTrue(response.getHeaders().containsKey("Location"));
+        assertEquals("/api/devices/" + deviceDto.id(), response.getHeaders().getLocation().getPath());
+    }
+
+
+    @Test
+    void createDeviceReturnsDeviceDto() {
+        when(deviceService.createDevice(any(DeviceCreateDto.class))).thenReturn(deviceDto);
+
+        ResponseEntity<DeviceDto> response = manageDevicesController.createDevice(deviceCreateDto);
+
+        assertNotNull(response.getBody());
+        assertEquals(deviceDto.id(), response.getBody().id());
+        assertEquals(deviceDto.name(), response.getBody().name());
+        assertEquals(deviceDto.state(), response.getBody().state());
+        assertEquals(deviceDto.brand(), response.getBody().brand());
+    }
+
+    @Test
+    void createDeviceWithNullStateReturnsBadRequest() throws Exception {
+        String url = "/api/createDevice";
+        DeviceCreateDto invalidDeviceDto = new DeviceCreateDto("Value1", "Value2", null);
+
+        mockMvc.perform(post(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDeviceDto)))
+                .andExpect(status().isBadRequest());
+    }
+}
