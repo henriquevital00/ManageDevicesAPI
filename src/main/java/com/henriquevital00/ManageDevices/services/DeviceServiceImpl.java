@@ -3,17 +3,21 @@ package com.henriquevital00.ManageDevices.services;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.entity.Device;
+import com.henriquevital00.ManageDevices.domain.entity.DeviceHistory;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.exception.DeviceInUseException;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
+import com.henriquevital00.ManageDevices.repository.DeviceHistoryRepository;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
+import com.henriquevital00.ManageDevices.utils.Constants;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +27,18 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DeviceServiceImpl implements  DeviceService {
     private DeviceRepository deviceRepository;
+    private DeviceHistoryRepository deviceHistoryRepository;
     private DeviceMapper deviceMapper;
+
+    private void saveDeviceHistory(Device device, String operationType) {
+        DeviceHistory history = new DeviceHistory();
+        history.setDeviceId(device.getId());
+        history.setName(device.getName());
+        history.setBrand(device.getBrand());
+        history.setState(device.getState());
+        history.setOperationType(operationType);
+        deviceHistoryRepository.save(history);
+    }
 
     @Override
     public DeviceDto createDevice(DeviceCreateDto deviceCreateDto) {
@@ -31,6 +46,7 @@ public class DeviceServiceImpl implements  DeviceService {
         device.setName(deviceCreateDto.name().toUpperCase());
         device.setBrand(deviceCreateDto.brand().toUpperCase());
         Device savedDevice = deviceRepository.save(device);
+        saveDeviceHistory(savedDevice, Constants.CREATION);
         return deviceMapper.toDto(savedDevice);
     }
 
@@ -89,6 +105,7 @@ public class DeviceServiceImpl implements  DeviceService {
         }
 
         deviceRepository.save(device);
+        saveDeviceHistory(device, Constants.UPDATE);
         return deviceMapper.toDto(device);
     }
 
@@ -102,5 +119,6 @@ public class DeviceServiceImpl implements  DeviceService {
         }
 
         deviceRepository.delete(device);
+        saveDeviceHistory(device, Constants.DELETION);
     }
 }

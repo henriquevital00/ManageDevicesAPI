@@ -3,10 +3,12 @@ package com.henriquevital00.ManageDevices.controller.services;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.entity.Device;
+import com.henriquevital00.ManageDevices.domain.entity.DeviceHistory;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.exception.DeviceInUseException;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
+import com.henriquevital00.ManageDevices.repository.DeviceHistoryRepository;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
 import com.henriquevital00.ManageDevices.services.DeviceServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +38,8 @@ import static org.mockito.Mockito.*;
 public class DeviceServiceTest {
     @Mock
     private DeviceRepository deviceRepository;
+    @Mock
+    private DeviceHistoryRepository deviceHistoryRepository;
 
     @Mock
     private DeviceMapper deviceMapper;
@@ -71,6 +75,7 @@ public class DeviceServiceTest {
         assertEquals(deviceDto.name(), result.name());
         assertEquals(deviceDto.state(), result.state());
         assertEquals(deviceDto.brand(), result.brand());
+        verify(deviceHistoryRepository, times(1)).save(any(DeviceHistory.class));
     }
 
     @Test
@@ -229,6 +234,7 @@ public class DeviceServiceTest {
         assertEquals(updatedDeviceDto.name(), result.name());
         assertEquals(updatedDeviceDto.brand(), result.brand());
         assertEquals(updatedDeviceDto.state(), result.state());
+        verify(deviceHistoryRepository, times(1)).save(any(DeviceHistory.class));
     }
 
     @Test
@@ -250,6 +256,7 @@ public class DeviceServiceTest {
         assertEquals(device.getName(), result.name());
         assertEquals(device.getBrand(), result.brand());
         assertEquals(updatedDeviceDto.state(), result.state());
+        verify(deviceHistoryRepository, times(1)).save(any(DeviceHistory.class));
     }
 
     @Test
@@ -276,6 +283,7 @@ public class DeviceServiceTest {
         deviceService.deleteDevice(id);
 
         verify(deviceRepository, times(1)).delete(device);
+        verify(deviceHistoryRepository, times(1)).save(any(DeviceHistory.class));
     }
 
     @Test
