@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -65,5 +66,20 @@ public class DeviceServiceImpl implements  DeviceService {
         return devices.stream()
                 .map(deviceMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    public DeviceDto updateDevice(Long id, DeviceCreateDto deviceCreateDto) {
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
+        if (device.getState() == DeviceStateEnum.IN_USE) {
+            device.setState(deviceCreateDto.state());
+        } else {
+            device.setName(deviceCreateDto.name());
+            device.setBrand(deviceCreateDto.brand());
+            device.setState(deviceCreateDto.state());
+        }
+
+        deviceRepository.save(device);
+        return deviceMapper.toDto(device);
     }
 }

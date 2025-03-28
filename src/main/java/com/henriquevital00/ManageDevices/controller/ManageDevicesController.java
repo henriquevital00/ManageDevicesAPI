@@ -59,4 +59,10 @@ public class ManageDevicesController {
         List<DeviceDto> devices = deviceService.getDevicesByState(state);
         return ResponseEntity.ok(devices);
     }
+
+    @PutMapping("/device/{id}")
+    public ResponseEntity<DeviceDto> updateDevice(@PathVariable Long id, @Valid @RequestBody DeviceCreateDto device) {
+        DeviceDto updatedDevice = deviceService.updateDevice(id, device);
+        return ResponseEntity.ok(updatedDevice);
+    }
 }

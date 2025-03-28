@@ -23,8 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -113,7 +112,7 @@ public class DeviceServiceTest {
 
         when(deviceRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> deviceService.getDeviceById(id)
         );
@@ -147,7 +146,7 @@ public class DeviceServiceTest {
 
         when(deviceRepository.getDeviceByBrand(brand)).thenReturn(new ArrayList<>());
 
-        ResourceNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> deviceService.getDevicesByBrand(brand)
         );
@@ -181,11 +180,65 @@ public class DeviceServiceTest {
 
         when(deviceRepository.getDeviceByState(state)).thenReturn(new ArrayList<>());
 
-        ResourceNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> deviceService.getDevicesByState(state)
         );
 
         assertEquals("state not found with the given input data AVAILABLE", exception.getMessage());
+    }
+
+    @Test
+    void updateDevice_ShouldUpdateDevice() {
+        long id = 1L;
+        DeviceCreateDto updateDto = new DeviceCreateDto("UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE);
+        Device updatedDevice = new Device(id, "UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE, LocalDateTime.now());
+        DeviceDto updatedDeviceDto = new DeviceDto(id, "UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE);
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(updatedDevice);
+        when(deviceMapper.toDto(any(Device.class))).thenReturn(updatedDeviceDto);
+
+        DeviceDto result = deviceService.updateDevice(id, updateDto);
+
+        assertNotNull(result);
+        assertEquals(updatedDeviceDto.id(), result.id());
+        assertEquals(updatedDeviceDto.name(), result.name());
+        assertEquals(updatedDeviceDto.brand(), result.brand());
+        assertEquals(updatedDeviceDto.state(), result.state());
+    }
+
+    @Test
+    void updateDevice_ShouldUpdateOnlyStateWhenInUse() {
+        long id = 1L;
+        device.setState(DeviceStateEnum.IN_USE);
+        DeviceCreateDto updateDto = new DeviceCreateDto("UpdatedName", "UpdatedBrand", DeviceStateEnum.INACTIVE);
+        Device updatedDevice = new Device(id, "Value1", "Value2", DeviceStateEnum.INACTIVE, LocalDateTime.now());
+        DeviceDto updatedDeviceDto = new DeviceDto(id, "Value1", "Value2", DeviceStateEnum.INACTIVE);
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(updatedDevice);
+        when(deviceMapper.toDto(any(Device.class))).thenReturn(updatedDeviceDto);
+
+        DeviceDto result = deviceService.updateDevice(id, updateDto);
+
+        assertNotNull(result);
+        assertEquals(updatedDeviceDto.id(), result.id());
+        assertEquals(device.getName(), result.name());
+        assertEquals(device.getBrand(), result.brand());
+        assertEquals(updatedDeviceDto.state(), result.state());
+    }
+
+    @Test
+    void updateDevice_ShouldThrowResourceNotFoundException() {
+        long id = 1L;
+        DeviceCreateDto updateDto = new DeviceCreateDto("UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE);
+
+        when(deviceRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> deviceService.updateDevice(id, updateDto)
+        );
     }
 }

@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -176,5 +177,25 @@ public class ManageDevicesControllerTest {
         );
 
         assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());
+    }
+
+    @Test
+    void updateDevice_ShouldUpdateDevice() {
+        long id = 1L;
+        DeviceCreateDto updateDto = new DeviceCreateDto("UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE);
+        DeviceDto updatedDeviceDto = new DeviceDto(id, "UpdatedName", "UpdatedBrand", DeviceStateEnum.AVAILABLE);
+
+        when(deviceService.updateDevice(id, updateDto)).thenReturn(updatedDeviceDto);
+
+        ResponseEntity<DeviceDto> result = manageDevicesController.updateDevice(id, updateDto);
+
+        DeviceDto responseBody = result.getBody();
+
+        assertNotNull(result.getBody());
+        assertEquals(result.getStatusCode(), HttpStatus.OK);
+        assertEquals(updatedDeviceDto.id(), responseBody.id());
+        assertEquals(updatedDeviceDto.name(), responseBody.name());
+        assertEquals(updatedDeviceDto.brand(), responseBody.brand());
+        assertEquals(updatedDeviceDto.state(), responseBody.state());
     }
 }
