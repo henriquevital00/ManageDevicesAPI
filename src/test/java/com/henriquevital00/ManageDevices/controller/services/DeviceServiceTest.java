@@ -120,4 +120,72 @@ public class DeviceServiceTest {
 
         assertEquals("id not found with the given input data 1", exception.getMessage());
     }
+
+    @Test
+    void getDevicesByBrand_ShouldReturnListOfDeviceDtos() {
+        String brand = "Brand1";
+        Device device1 = new Device(1L, "Device1", brand, DeviceStateEnum.AVAILABLE, null);
+        Device device2 = new Device(2L, "Device2", brand, DeviceStateEnum.INACTIVE, null);
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", brand, DeviceStateEnum.INACTIVE);
+
+        when(deviceRepository.getDeviceByBrand(brand)).thenReturn(Arrays.asList(device1, device2));
+        when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
+        when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
+
+        List<DeviceDto> result = deviceService.getDevicesByBrand(brand);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(deviceDto1, result.get(0));
+        assertEquals(deviceDto2, result.get(1));
+    }
+
+    @Test
+    void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
+        String brand = "NonExistentBrand";
+
+        when(deviceRepository.getDeviceByBrand(brand)).thenReturn(new ArrayList<>());
+
+        ResourceNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> deviceService.getDevicesByBrand(brand)
+        );
+
+        assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());
+    }
+
+    @Test
+    void getDevicesByState_ShouldReturnListOfDeviceDtos() {
+        DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
+        Device device1 = new Device(1L, "Device1", "Brand1", state, null);
+        Device device2 = new Device(2L, "Device2", "Brand2", state, null);
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", "Brand1", state);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", "Brand2", state);
+
+        when(deviceRepository.getDeviceByState(state)).thenReturn(Arrays.asList(device1, device2));
+        when(deviceMapper.toDto(device1)).thenReturn(deviceDto1);
+        when(deviceMapper.toDto(device2)).thenReturn(deviceDto2);
+
+        List<DeviceDto> result = deviceService.getDevicesByState(state);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(deviceDto1, result.get(0));
+        assertEquals(deviceDto2, result.get(1));
+    }
+
+    @Test
+    void getDevicesByState_ShouldThrowResourceNotFoundException() {
+        DeviceStateEnum state = DeviceStateEnum.AVAILABLE;
+
+        when(deviceRepository.getDeviceByState(state)).thenReturn(new ArrayList<>());
+
+        ResourceNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> deviceService.getDevicesByState(state)
+        );
+
+        assertEquals("state not found with the given input data AVAILABLE", exception.getMessage());
+    }
 }

@@ -3,6 +3,7 @@ package com.henriquevital00.ManageDevices.services;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
 import com.henriquevital00.ManageDevices.domain.entity.Device;
+import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.mapper.DeviceMapper;
 import com.henriquevital00.ManageDevices.repository.DeviceRepository;
@@ -22,6 +23,8 @@ public class DeviceServiceImpl implements  DeviceService {
     @Override
     public DeviceDto createDevice(DeviceCreateDto deviceCreateDto) {
         Device device = deviceMapper.toEntity(deviceCreateDto);
+        device.setName(deviceCreateDto.name().toUpperCase());
+        device.setBrand(deviceCreateDto.brand().toUpperCase());
         Device savedDevice = deviceRepository.save(device);
         return deviceMapper.toDto(savedDevice);
     }
@@ -37,5 +40,30 @@ public class DeviceServiceImpl implements  DeviceService {
     public DeviceDto getDeviceById(Long id) {
         Optional<Device> device = deviceRepository.findById(id);
         return device.map(deviceMapper::toDto).orElseThrow(() -> new ResourceNotFoundException("id", id.toString()));
+    }
+
+    @Override
+    public List<DeviceDto> getDevicesByBrand(String brand) {
+        String searchBrand = brand.toUpperCase();
+        List<Device> devices = deviceRepository.getDeviceByBrand(searchBrand);
+        if (devices.isEmpty()) {
+            throw new ResourceNotFoundException("brand", searchBrand);
+        }
+
+        return devices.stream()
+                .map(deviceMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DeviceDto> getDevicesByState(DeviceStateEnum state) {
+        List<Device> devices = deviceRepository.getDeviceByState(state);
+        if (devices.isEmpty()) {
+            throw new ResourceNotFoundException("state", state.toString());
+        }
+
+        return devices.stream()
+                .map(deviceMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

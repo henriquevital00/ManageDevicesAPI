@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henriquevital00.ManageDevices.controller.ManageDevicesController;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
+import com.henriquevital00.ManageDevices.domain.entity.Device;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.exception.GlobalExceptionHandler;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
@@ -145,5 +146,35 @@ public class ManageDevicesControllerTest {
 
         mockMvc.perform(get("/api/device/1"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getDevicesByBrand_ShouldReturnListOfDeviceDtos() {
+        String brand = "Brand1";
+        DeviceDto deviceDto1 = new DeviceDto(1L, "Device1", brand, DeviceStateEnum.AVAILABLE);
+        DeviceDto deviceDto2 = new DeviceDto(2L, "Device2", brand, DeviceStateEnum.INACTIVE);
+
+        when(deviceService.getDevicesByBrand(brand)).thenReturn(Arrays.asList(deviceDto1, deviceDto2));
+
+        List<DeviceDto> result = deviceService.getDevicesByBrand(brand);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(deviceDto1, result.get(0));
+        assertEquals(deviceDto2, result.get(1));
+    }
+
+    @Test
+    void getDevicesByBrand_ShouldThrowResourceNotFoundException() {
+        String brand = "NonExistentBrand";
+
+        when(deviceService.getDevicesByBrand(brand)).thenThrow(new ResourceNotFoundException("brand", brand));
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> deviceService.getDevicesByBrand(brand)
+        );
+
+        assertEquals("brand not found with the given input data NonExistentBrand", exception.getMessage());
     }
 }

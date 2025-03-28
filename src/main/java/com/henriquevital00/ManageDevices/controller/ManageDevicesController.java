@@ -2,6 +2,7 @@ package com.henriquevital00.ManageDevices.controller;
 
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
+import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
 import com.henriquevital00.ManageDevices.services.DeviceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -45,5 +46,17 @@ public class ManageDevicesController {
     public ResponseEntity<DeviceDto> getDeviceById(@PathVariable Long id) {
         DeviceDto device = deviceService.getDeviceById(id);
         return ResponseEntity.ok(device);
+    }
+
+    @GetMapping("/devices/brand")
+    public ResponseEntity<List<DeviceDto>> getDevicesByBrand(@RequestParam String brand) {
+        List<DeviceDto> devices = deviceService.getDevicesByBrand(brand);
+        return ResponseEntity.ok(devices);
+    }
+
+    @GetMapping("/devices/state")
+    public ResponseEntity<List<DeviceDto>> getDevicesByState(@RequestParam DeviceStateEnum state) {
+        List<DeviceDto> devices = deviceService.getDevicesByState(state);
+        return ResponseEntity.ok(devices);
     }
 }
