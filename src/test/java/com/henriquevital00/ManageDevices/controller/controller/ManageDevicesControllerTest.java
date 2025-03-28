@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henriquevital00.ManageDevices.controller.ManageDevicesController;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceCreateDto;
 import com.henriquevital00.ManageDevices.domain.dto.DeviceDto;
-import com.henriquevital00.ManageDevices.domain.entity.Device;
 import com.henriquevital00.ManageDevices.domain.enums.DeviceStateEnum;
+import com.henriquevital00.ManageDevices.exception.DeviceInUseException;
 import com.henriquevital00.ManageDevices.exception.GlobalExceptionHandler;
 import com.henriquevital00.ManageDevices.exception.ResourceNotFoundException;
 import com.henriquevital00.ManageDevices.services.DeviceService;
@@ -23,16 +23,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -206,5 +205,33 @@ public class ManageDevicesControllerTest {
         assertEquals(updatedDeviceDto.name(), responseBody.name());
         assertEquals(updatedDeviceDto.brand(), responseBody.brand());
         assertEquals(updatedDeviceDto.state(), responseBody.state());
+    }
+
+    @Test
+    void deleteDevice_ShouldReturnNoContentStatus() throws Exception {
+        long id = 1L;
+
+        mockMvc.perform(delete("/api/device/{id}", id))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteDevice_ShouldReturnNotFoundStatus() throws Exception {
+        long id = 1L;
+
+        doThrow(new ResourceNotFoundException("id", String.valueOf(id))).when(deviceService).deleteDevice(id);
+
+        mockMvc.perform(delete("/api/device/{id}", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteDevice_ShouldReturnConflictStatusWhenDeviceInUse() throws Exception {
+        long id = 1L;
+
+        doThrow(new DeviceInUseException("Device is currently in use")).when(deviceService).deleteDevice(id);
+
+        mockMvc.perform(delete("/api/device/{id}", id))
+                .andExpect(status().isForbidden());
     }
 }
